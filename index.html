@@ -519,6 +519,8 @@ function analyzePath(targetDir, name) {
 let mode = "craft";
 let entries = [];               
 let uploadSrc = null;          
+let newFileSelected = false;
+let editingIndex = -1;
 
 /* ---------- UI bindings ---------- */
 $("mode-craft").addEventListener("click", () => setMode("craft"));
@@ -544,6 +546,7 @@ $("entry-file").addEventListener("change", async e => {
   const f = e.target.files[0];
   if (!f) return;
   uploadSrc = { name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) };
+  newFileSelected = true;
   toast("Loaded " + f.name + " (" + uploadSrc.bytes.length + " B)");
 });
 
@@ -552,8 +555,6 @@ function buildEntryName(fileName, dest) {
   const d = (dest || "").trim().replace(/\\/g, "/").replace(/\/+$/, "");
   if (!d) return { entry: fileName };
   
-  // Paths are concatenated exactly as provided. 
-  // User must manually input "../" if relative traversal is required.
   const sep = d.endsWith("/") ? "" : "/";
   return { entry: d + sep + fileName };
 }
@@ -574,39 +575,101 @@ function updatePreview() {
 
 $("toggle-form").addEventListener("click", () => {
   $("entry-form").style.display = "block";
+  editingIndex = -1;
+  $("add-entry").textContent = "Commit Entry";
   updatePreview();
   $("entry-name").focus();
 });
-$("cancel-entry").addEventListener("click", () => { $("entry-form").style.display = "none"; });
 
-$("add-entry").addEventListener("click", () => {
-  const fileName = $("entry-name").value.trim();
-  if (!fileName) { toast("Filename required"); return; }
-  let data, srcLabel;
-  if ($("src-text").classList.contains("active")) {
-    data = enc.encode($("entry-content").value);
-    srcLabel = "text · " + data.length + " B";
-  } else {
-    if (!uploadSrc) { toast("File required"); return; }
-    data = uploadSrc.bytes;
-    srcLabel = "file · " + data.length + " B";
-  }
-  const dest = $("entry-dest").value.trim();
-  const r = buildEntryName(fileName, dest);
-  entries.push({ fileName, dest, entry: r.entry, data, srcLabel });
+$("cancel-entry").addEventListener("click", () => { 
+  $("entry-form").style.display = "none"; 
+  editingIndex = -1;
+  $("add-entry").textContent = "Commit Entry";
   $("entry-name").value = "";
   $("entry-content").value = "";
   $("entry-dest").value = "";
   $("entry-file").value = "";
   uploadSrc = null;
-  $("entry-form").style.display = "none";
-  renderEntries();
-  toast("Entry committed");
+  newFileSelected = false;
 });
 
-$("clear-entries").addEventListener("click", () => { entries = []; renderEntries(); });
+$("add-entry").addEventListener("click", () => {
+  const fileName = $("entry-name").value.trim();
+  if (!fileName) { toast("Filename required"); return; }
+  let data, srcLabel;
+  
+  if ($("src-text").classList.contains("active")) {
+    data = enc.encode($("entry-content").value);
+    srcLabel = "text · " + data.length + " B";
+  } else {
+    if (uploadSrc && newFileSelected) {
+      data = uploadSrc.bytes;
+      srcLabel = "file · " + data.length + " B";
+    } else if (editingIndex >= 0) {
+      data = entries[editingIndex].data;
+      srcLabel = entries[editingIndex].srcLabel;
+    } else {
+      toast("File required"); return;
+    }
+  }
+  
+  const dest = $("entry-dest").value.trim();
+  const r = buildEntryName(fileName, dest);
+  const newEntry = { fileName, dest, entry: r.entry, data, srcLabel };
 
-function removeEntry(i) { entries.splice(i, 1); renderEntries(); }
+  if (editingIndex >= 0) {
+    entries[editingIndex] = newEntry;
+    toast("Entry updated");
+    editingIndex = -1;
+    $("add-entry").textContent = "Commit Entry";
+  } else {
+    entries.push(newEntry);
+    toast("Entry committed");
+  }
+
+  $("entry-name").value = "";
+  $("entry-content").value = "";
+  $("entry-dest").value = "";
+  $("entry-file").value = "";
+  uploadSrc = null;
+  newFileSelected = false;
+  $("entry-form").style.display = "none";
+  renderEntries();
+});
+
+$("clear-entries").addEventListener("click", () => { 
+  entries = []; 
+  editingIndex = -1;
+  $("add-entry").textContent = "Commit Entry";
+  renderEntries(); 
+});
+
+function removeEntry(i) { 
+  entries.splice(i, 1); 
+  renderEntries(); 
+}
+
+function editEntry(i) {
+  editingIndex = i;
+  const e = entries[i];
+  
+  $("entry-name").value = e.fileName;
+  $("entry-dest").value = e.dest || "";
+
+  try {
+     const text = new TextDecoder("utf-8", { fatal: true }).decode(e.data);
+     $("entry-content").value = text;
+     setSrc("text");
+  } catch(err) {
+     $("entry-content").value = "";
+     setSrc("file");
+  }
+
+  $("entry-form").style.display = "block";
+  $("add-entry").textContent = "Update Entry";
+  updatePreview();
+  $("entry-name").focus();
+}
 
 function renderEntries() {
   const list = $("entry-list");
@@ -620,16 +683,19 @@ function renderEntries() {
       : a.escapes
         ? '<span class="badge escape">ESCAPE</span>'
         : '<span class="badge safe">SAFE</span>';
+        
     div.innerHTML =
       '<div><div class="path">' + escapeHtml(e.entry) + "</div>" +
       '<div class="meta">' + escapeHtml(e.fileName) + " · " + escapeHtml(e.srcLabel) +
       (e.dest ? " · dest: " + escapeHtml(e.dest) : "") + "</div></div>" +
       '<div class="right">' + escBadge +
-      '<button class="btn secondary small">Copy</button>' +
-      '<button class="btn danger small">Del</button></div>';
-    const [copyBtn, rmBtn] = div.querySelectorAll("button");
-    copyBtn.addEventListener("click", () => copyText(e.entry));
-    rmBtn.addEventListener("click", () => removeEntry(i));
+      '<button class="btn secondary small copy-btn">Copy</button>' +
+      '<button class="btn secondary small edit-btn">Edit</button>' +
+      '<button class="btn danger small del-btn">Del</button></div>';
+
+    div.querySelector(".copy-btn").addEventListener("click", () => copyText(e.entry));
+    div.querySelector(".edit-btn").addEventListener("click", () => editEntry(i));
+    div.querySelector(".del-btn").addEventListener("click", () => removeEntry(i));
     list.appendChild(div);
   });
 }
@@ -638,7 +704,7 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-/* ---------- demo payload (updated to show manual ../ usage) ---------- */
+/* ---------- demo payload ---------- */
 $("load-demo").addEventListener("click", () => {
   entries = [
     { fileName: "update.txt", dest: "", entry: "update.txt", data: enc.encode("legit update file — stays inside the extraction directory\n"), srcLabel: "text · demo" },
@@ -696,8 +762,8 @@ $("upload-zip").addEventListener("change", async e => {
         (a.isAbs ? '<span class="badge abs">ABS</span>'
           : dangerous ? '<span class="badge escape">ESCAPE ×' + a.escapeDepth + "</span>"
           : '<span class="badge safe">SAFE</span>') +
-        '<button class="btn secondary small">Copy</button></div>';
-      div.querySelector("button").addEventListener("click", () => copyText(en.name));
+        '<button class="btn secondary small copy-btn">Copy</button></div>';
+      div.querySelector(".copy-btn").addEventListener("click", () => copyText(en.name));
       list.appendChild(div);
     });
     $("analyze-summary").style.display = found.length ? "flex" : "none";
